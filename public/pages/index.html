@@ -23,7 +23,6 @@
     </div>
   </div>
 
-  <!-- Cart slide-in panel -->
   <div class="cart-panel" id="cart-panel">
     <button class="close-btn" onclick="window.toggleCart()">×</button>
     <header>
@@ -42,7 +41,6 @@
     renderNav('main-nav')
     updateCartBadge()
 
-    // ── Cart toggle ───────────────────────────────────────
     window.toggleCart = () => {
       if (!isLoggedIn()) { window.location.href = '/pages/login.html'; return }
       const panel = document.getElementById('cart-panel')
@@ -110,7 +108,6 @@
       }
     }
 
-    // ── Products ──────────────────────────────────────────
     let currentPage = 1
 
     async function loadProducts(page = 1, search = '') {
@@ -159,7 +156,6 @@
       }
     }
 
-    // ✅ Fixed pagination — no fixed 4-column grid, uses flex in CSS
     function renderPagination(page, total, search) {
       const el = document.getElementById('pagination')
       if (total <= 1) { el.innerHTML = ''; return }

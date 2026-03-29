@@ -62,7 +62,6 @@
     .admin-btn.danger { border-color: var(--red); color: var(--red); }
     .admin-btn.danger:hover { background: var(--red); color: white; }
 
-     /* Order card  */
     .order-admin-card {
       border: 1px solid var(--offWhite);
       box-shadow: var(--bs);
@@ -114,7 +113,6 @@
 
   <div class="page">
 
-    <!-- Access denied -->
     <div id="access-denied" style="display:none">
       <div class="error-message">
         <p><strong>Access Denied.</strong> You must be an admin to view this page.</p>
@@ -122,7 +120,6 @@
       <a href="/" class="sick-button">← Go Home</a>
     </div>
 
-    <!-- Admin panel -->
     <div id="admin-panel" style="display:none">
       <h1 class="supreme">Admin Panel</h1>
       <br/><br/>
@@ -203,7 +200,7 @@
       if (file) { preview.src = URL.createObjectURL(file); preview.classList.add('show') }
       else { preview.classList.remove('show') }
     })
-    // load products
+
     async function loadProducts() {
       const el = document.getElementById('products-list')
       try {

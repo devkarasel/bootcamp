@@ -21,7 +21,6 @@
   <div class="page">
     <div class="auth-grid">
 
-      <!-- Sign In -->
       <div>
         <h2>Sign Into Your Account</h2>
         <div id="login-error" class="error-message" style="display:none"></div>
@@ -38,7 +37,6 @@
         </form>
       </div>
 
-      <!-- Sign Up -->
       <div>
         <h2>Sign Up For an Account</h2>
         <div id="signup-error" class="error-message" style="display:none"></div>
@@ -58,7 +56,6 @@
         </form>
       </div>
 
-      <!-- Request Reset -->
       <div>
         <h2>Request a Password Reset</h2>
         <form id="reset-form" class="sick-form">
@@ -82,7 +79,6 @@
       e.preventDefault()
       const errEl = document.getElementById('login-error')
       errEl.style.display = 'none'
-      // Collect data BEFORE disabling fieldset
       const data = Object.fromEntries(new FormData(e.target))
       const fs  = document.getElementById('login-fs')
       fs.setAttribute('aria-busy', 'true')
@@ -107,7 +103,7 @@
       e.preventDefault()
       const errEl = document.getElementById('signup-error')
       errEl.style.display = 'none'
-      // ✅ collect data BEFORE disabling fieldset
+
       const data = Object.fromEntries(new FormData(e.target))
       const fs  = document.getElementById('signup-fs')
       fs.setAttribute('aria-busy', 'true')
