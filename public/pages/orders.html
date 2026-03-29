@@ -4,55 +4,79 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Your Orders — Sick Fits</title>
-  <link rel="stylesheet" href="/css/global.css"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700;900&display=swap" rel="stylesheet"/>
+  <style>
+    body { font-family: 'Roboto Condensed', sans-serif; }
+    .nav-link::after { content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:0; height:2px; background:#dc2626; transition:width 0.4s cubic-bezier(1,-0.65,0,2.31); }
+    .nav-link:hover::after { width:calc(100% - 2rem); }
+    .nav-link::before { content:''; position:absolute; left:0; top:0; width:2px; height:100%; background:#d1d5db; transform:skewX(-20deg); }
+  </style>
 </head>
-<body>
-  <header>
-    <div class="inner-header">
-      <div class="logo"><a href="/">Sick Fits</a></div>
-      <nav class="nav-links" id="main-nav"></nav>
+<body class="bg-white text-[#393939]">
+  <header class="bg-[#393939] sticky top-0 z-40">
+    <div class="flex items-stretch justify-between px-6 py-4">
+      <div class="text-5xl ml-6 relative z-10 self-center">
+        <a href="/" class="bg-red-600 text-white uppercase px-6 py-1 no-underline font-black skew-x-[-20deg] inline-block">
+          Sick Fits
+        </a>
+      </div>
+      <nav id="main-nav" class="flex flex-wrap justify-end text-2xl font-black uppercase"></nav>
     </div>
   </header>
-  <div class="page">
-    <h1 class="supreme">Your Orders</h1>
-    <br/><br/>
-    <ul id="orders-list" style="padding:0;list-style:none;display:grid;gap:3rem"></ul>
+  <div class="max-w-4xl mx-auto px-6 py-10">
+    <h1 class="bg-red-600 text-white inline-block px-1.5 py-1 text-4xl font-black -skew-x-3 mb-8">Your Orders</h1>
+    <ul id="orders-list" class="p-0 list-none space-y-8 mt-8"></ul>
   </div>
   <script type="module">
-    import { api, isLoggedIn, formatPrice, toast, renderNav } from '/js/utils.js'
+    import { api, isLoggedIn, formatPrice, renderNav, updateCartBadge } from '/js/utils.js'
     renderNav('main-nav')
+    updateCartBadge()
 
     const list = document.getElementById('orders-list')
-
     if (!isLoggedIn()) {
-      list.innerHTML = `<li class="error-message"><p>Please <a href="/pages/login.html">sign in</a> to view your orders.</p></li>`
+      list.innerHTML = `<li class="p-4 border-l-4 border-red-600 bg-red-50">
+        Please <a href="/pages/login.html" class="underline">sign in</a> to view your orders.</li>`
     } else {
       api('/orders').then(orders => {
         if (!orders.length) {
-          list.innerHTML = `<li class="loading-text">No orders yet. <a href="/">Start shopping →</a></li>`
+          list.innerHTML = `<li class="text-center text-2xl py-12 text-gray-400">No orders yet. <a href="/" class="underline text-red-600">Start shopping →</a></li>`
           return
         }
+        const statusColors = {
+          PENDING:    'bg-yellow-100 text-yellow-800',
+          PROCESSING: 'bg-blue-100 text-blue-800',
+          SHIPPED:    'bg-purple-100 text-purple-800',
+          DELIVERED:  'bg-green-100 text-green-800',
+        }
         list.innerHTML = orders.map(order => `
-          <li class="order-list-item">
-            <h2>
-              Order for ${formatPrice(order.total)}
-              <span style="font-size:1.4rem;font-weight:300"> — ${new Date(order.createdAt).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</span>
-            </h2>
-            <div class="order-meta">
-              <p><strong>${order.items.reduce((s, i) => s + i.quantity, 0)}</strong> Items</p>
-              <p><strong>${formatPrice(order.total)}</strong> Total</p>
-              <p><strong style="text-transform:uppercase">${order.status}</strong> Status</p>
+          <li class="border border-gray-100 shadow-[0_12px_24px_0_rgba(0,0,0,0.09)] border-t-[10px] border-t-red-600 p-6">
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 pb-5 mb-5">
+              <div>
+                <p class="m-0 text-3xl font-black">${formatPrice(order.total)}</p>
+                <p class="m-0 text-sm text-gray-400">${new Date(order.createdAt).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-sm px-3 py-1 rounded font-bold uppercase ${statusColors[order.status] || statusColors.PENDING}">
+                  ${order.status}
+                </span>
+                <span class="text-sm text-gray-400">${order.items.reduce((s,i)=>s+i.quantity,0)} items</span>
+              </div>
             </div>
-            <div class="images">
-              ${order.items.map(i =>
-                i.product.imageUrl
-                  ? `<img src="${i.product.imageUrl}" alt="${i.product.name}"/>`
-                  : `<div style="background:var(--offWhite);height:200px"></div>`
-              ).join('')}
+            <div class="grid gap-2" style="grid-template-columns:repeat(auto-fill,minmax(0,1fr))">
+              ${order.items.map(i => `
+                <div>
+                  ${i.product.imageUrl
+                    ? `<img src="${i.product.imageUrl}" class="w-full h-[180px] object-cover"/>`
+                    : `<div class="w-full h-[180px] bg-gray-100"></div>`
+                  }
+                  <p class="text-sm font-bold mt-1 mb-0">${i.product.name}</p>
+                  <p class="text-sm text-gray-500 m-0">${formatPrice(i.price)} &times; ${i.quantity}</p>
+                </div>`).join('')}
             </div>
           </li>`).join('')
       }).catch(err => {
-        list.innerHTML = `<li class="error-message"><p><strong>Error:</strong> ${err.message}</p></li>`
+        list.innerHTML = `<li class="p-4 border-l-4 border-red-600 bg-red-50"><strong>Error:</strong> ${err.message}</li>`
       })
     }
   </script>

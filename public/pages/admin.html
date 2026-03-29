@@ -4,173 +4,122 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin — Sick Fits</title>
-  <link rel="stylesheet" href="/css/global.css"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700;900&display=swap" rel="stylesheet"/>
   <style>
-    .admin-grid {
-      display: grid;
-      grid-template-columns: 350px 1fr;
-      gap: 4rem;
-      align-items: start;
-    }
-    @media (max-width: 800px) { .admin-grid { grid-template-columns: 1fr; } }
-
-    .tab-bar {
-      display: flex;
-      border-bottom: 5px solid var(--offWhite);
-      margin-bottom: 3rem;
-    }
-    .tab-btn {
-      background: none;
-      border: 0;
-      font-family: inherit;
-      font-size: 1.5rem;
-      font-weight: 900;
-      text-transform: uppercase;
-      padding: 1rem 2rem;
-      cursor: pointer;
-      color: var(--lightGray);
-      border-bottom: 5px solid transparent;
-      margin-bottom: -5px;
-    }
-    .tab-btn.active { color: var(--red); border-bottom-color: var(--red); }
-    .tab-btn:hover { color: var(--black); }
-
-    .product-row {
-      display: grid;
-      grid-template-columns: 60px 1fr auto;
-      align-items: center;
-      gap: 1.5rem;
-      padding: 1rem 0;
-      border-bottom: 1px solid var(--lightGray);
-    }
-    .product-row img { width: 60px; height: 60px; object-fit: cover; }
-    .product-row-placeholder { width: 60px; height: 60px; background: var(--offWhite); }
-    .product-row h4 { margin: 0; font-size: 1.4rem; }
-    .product-row p  { margin: 0; font-size: 1.2rem; color: var(--grey, #666); }
-    .product-row .actions { display: flex; gap: 0.5rem; }
-
-    .admin-btn {
-      background: none;
-      border: 1px solid var(--lightGray);
-      font-family: inherit;
-      font-size: 1.1rem;
-      padding: 0.4rem 1rem;
-      cursor: pointer;
-      color: var(--black);
-    }
-    .admin-btn:hover { background: var(--offWhite); }
-    .admin-btn.danger { border-color: var(--red); color: var(--red); }
-    .admin-btn.danger:hover { background: var(--red); color: white; }
-
-    .order-admin-card {
-      border: 1px solid var(--offWhite);
-      box-shadow: var(--bs);
-      margin-bottom: 2rem;
-      border-top: 5px solid var(--red);
-    }
-    .order-admin-header {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr auto;
-      gap: 1rem;
-      padding: 1.5rem;
-      border-bottom: 1px solid var(--offWhite);
-      background: rgba(0,0,0,0.02);
-      align-items: center;
-    }
-    @media (max-width: 700px) { .order-admin-header { grid-template-columns: 1fr 1fr; } }
-    .order-admin-header label { font-size: 1rem; font-weight: 900; text-transform: uppercase; color: var(--lightGray); display: block; margin-bottom: 0.3rem; }
-    .order-admin-header p { margin: 0; font-size: 1.3rem; }
-    .order-admin-items { padding: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; }
-    .order-admin-item {
-      background: var(--offWhite);
-      padding: 0.5rem 1rem;
-      font-size: 1.2rem;
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-    }
-    .order-status-select {
-      font-family: inherit;
-      font-size: 1.2rem;
-      padding: 0.4rem 0.8rem;
-      border: 1px solid var(--lightGray);
-      background: white;
-      cursor: pointer;
-    }
-    .order-status-select:focus { outline: 0; border-color: var(--red); }
-
-    #img-preview { display:none; max-width:100%; max-height:200px; object-fit:cover; margin-top:1rem; }
-    #img-preview.show { display:block; }
+    body { font-family: 'Roboto Condensed', sans-serif; }
+    .nav-link::after { content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:0; height:2px; background:#dc2626; transition:width 0.4s cubic-bezier(1,-0.65,0,2.31); }
+    .nav-link:hover::after { width:calc(100% - 2rem); }
+    .nav-link::before { content:''; position:absolute; left:0; top:0; width:2px; height:100%; background:#d1d5db; transform:skewX(-20deg); }
+    .sick-fieldset::before { content:''; display:block; height:10px; background:linear-gradient(to right,#ff3019 0%,#e2b04a 50%,#ff3019 100%); }
+    @keyframes loading { from{background-position:0 0} to{background-position:100% 100%} }
+    .sick-fieldset[aria-busy="true"]::before { background-size:50% auto; animation:loading 0.5s linear infinite; }
+    .tab-active { border-bottom: 4px solid #dc2626; color: #dc2626; }
   </style>
 </head>
-<body>
-  <header>
-    <div class="inner-header">
-      <div class="logo"><a href="/">Sick Fits</a></div>
-      <nav class="nav-links" id="main-nav"></nav>
+<body class="bg-white text-[#393939]">
+
+  <header class="bg-[#393939] sticky top-0 z-40">
+    <div class="flex items-stretch justify-between px-6 py-4">
+      <div class="text-5xl ml-6 relative z-10 self-center">
+        <a href="/" class="bg-red-600 text-white uppercase px-6 py-1 no-underline font-black skew-x-[-20deg] inline-block">
+          Sick Fits
+        </a>
+      </div>
+      <nav id="main-nav" class="flex flex-wrap justify-end text-2xl font-black uppercase"></nav>
     </div>
   </header>
+  <div class="max-w-5xl mx-auto px-6 py-10">
 
-  <div class="page">
-
-    <div id="access-denied" style="display:none">
-      <div class="error-message">
+    <!-- Access denied -->
+    <div id="access-denied" class="hidden">
+      <div class="p-4 border-l-4 border-red-600 bg-red-50 mb-4">
         <p><strong>Access Denied.</strong> You must be an admin to view this page.</p>
       </div>
-      <a href="/" class="sick-button">← Go Home</a>
+      <a href="/" class="bg-red-600 text-white uppercase text-2xl font-medium px-6 py-3 -skew-x-2 no-underline inline-block hover:opacity-85">← Go Home</a>
     </div>
 
-    <div id="admin-panel" style="display:none">
-      <h1 class="supreme">Admin Panel</h1>
-      <br/><br/>
+    <!-- Admin panel -->
+    <div id="admin-panel" class="hidden">
+      <h1 class="bg-red-600 text-white inline-block px-1.5 py-1 text-4xl font-black -skew-x-3 mb-6">Admin Panel</h1>
 
-      <div class="tab-bar">
-        <button class="tab-btn active" id="tab-products" onclick="switchTab('products')">Products</button>
-        <button class="tab-btn" id="tab-orders" onclick="switchTab('orders')">Orders</button>
+      <!-- Tabs -->
+      <div class="flex border-b-4 border-gray-100 mb-8 mt-8">
+        <button id="tab-products" onclick="switchTab('products')"
+          class="tab-active bg-transparent border-0 text-2xl font-black uppercase px-6 py-3 cursor-pointer font-[inherit] transition-colors">
+          Products
+        </button>
+        <button id="tab-orders" onclick="switchTab('orders')"
+          class="bg-transparent border-0 text-2xl font-black uppercase px-6 py-3 cursor-pointer font-[inherit] text-gray-400 hover:text-[#393939] transition-colors border-b-4 border-transparent">
+          Orders
+        </button>
       </div>
 
+      <!-- Products panel -->
       <div id="panel-products">
-        <div class="admin-grid">
+        <div class="grid grid-cols-[380px_1fr] gap-10 items-start">
 
+          <!-- Form -->
           <div>
-            <h2 id="form-heading" style="font-size:2rem;margin-top:0">Add a Product</h2>
-            <div id="form-error" class="error-message" style="display:none"></div>
-            <form id="product-form" class="sick-form">
-              <fieldset id="product-fs">
-                <label>Image
-                  <input name="image" type="file" id="f-image" accept="image/*"/>
+            <h2 id="form-heading" class="text-3xl font-black mb-4">Add a Product</h2>
+            <div id="form-error" class="hidden p-3 border-l-4 border-red-600 bg-red-50 text-red-700 text-base mb-4"></div>
+            <form id="product-form" class="shadow-[0_0_5px_3px_rgba(0,0,0,0.05)] bg-black/[0.02] border-4 border-white p-5">
+              <fieldset id="product-fs" class="sick-fieldset border-0 p-0">
+                <label class="block mb-3 font-semibold">
+                  <span class="block mb-1 text-xs font-bold uppercase tracking-wide">Image</span>
+                  <input id="f-image" type="file" accept="image/*"
+                    class="w-full text-sm border border-[#393939] px-2 py-1 cursor-pointer bg-white"/>
                 </label>
-                <img id="img-preview" class="" alt="preview"/>
-                <label>Name
-                  <input name="name" type="text" id="f-name" required placeholder="Product name"/>
+                <img id="img-preview" class="hidden w-full max-h-36 object-cover mb-3 border border-gray-200"/>
+                <label class="block mb-3 font-semibold">
+                  <span class="block mb-1 text-xs font-bold uppercase tracking-wide">Name</span>
+                  <input id="f-name" type="text" required placeholder="Product name"
+                    class="w-full px-2 py-1.5 text-sm border border-[#393939] focus:outline-none focus:border-red-600"/>
                 </label>
-                <label>Price ($)
-                  <input name="price" type="number" id="f-price" step="0.01" min="0" required placeholder="0.00"/>
-                </label>
-                <label>Stock
-                  <input name="stock" type="number" id="f-stock" min="0" value="0" required/>
-                </label>
-                <label>Description
-                  <textarea name="description" id="f-desc" required placeholder="Describe the product..."></textarea>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="block mb-3 font-semibold">
+                    <span class="block mb-1 text-xs font-bold uppercase tracking-wide">Price ($)</span>
+                    <input id="f-price" type="number" step="0.01" min="0" required placeholder="0.00"
+                      class="w-full px-2 py-1.5 text-sm border border-[#393939] focus:outline-none focus:border-red-600"/>
+                  </label>
+                  <label class="block mb-3 font-semibold">
+                    <span class="block mb-1 text-xs font-bold uppercase tracking-wide">Stock</span>
+                    <input id="f-stock" type="number" min="0" value="0" required
+                      class="w-full px-2 py-1.5 text-sm border border-[#393939] focus:outline-none focus:border-red-600"/>
+                  </label>
+                </div>
+                <label class="block mb-3 font-semibold">
+                  <span class="block mb-1 text-xs font-bold uppercase tracking-wide">Description</span>
+                  <textarea id="f-desc" required rows="3" placeholder="Describe the product..."
+                    class="w-full px-2 py-1.5 text-sm border border-[#393939] focus:outline-none focus:border-red-600 resize-y"></textarea>
                 </label>
                 <input type="hidden" id="edit-id"/>
-                <button type="submit" id="submit-btn">+ Add Product!</button>
-                <button type="button" id="cancel-btn" onclick="resetForm()" style="display:none;background:var(--lightGray);color:var(--black);margin-left:1rem">Cancel</button>
+                <div class="flex gap-2 flex-wrap">
+                  <button type="submit" id="submit-btn"
+                    class="bg-red-600 text-white border-0 text-xl font-semibold px-4 py-2 cursor-pointer disabled:opacity-50">
+                    + Add Product!
+                  </button>
+                  <button type="button" id="cancel-btn" onclick="resetForm()"
+                    class="hidden bg-gray-200 text-[#393939] border-0 text-xl font-semibold px-4 py-2 cursor-pointer hover:bg-gray-300 transition-colors">
+                    Cancel
+                  </button>
+                </div>
               </fieldset>
             </form>
           </div>
 
+          <!-- Product list -->
           <div>
-            <h2 style="font-size:2rem;margin-top:0">All Products</h2>
-            <div id="products-list"><p class="loading-text">Loading...</p></div>
+            <h2 class="text-3xl font-black mb-4">All Products</h2>
+            <div id="products-list"><p class="text-center text-xl py-8 text-gray-400">Loading...</p></div>
           </div>
         </div>
       </div>
 
-      <div id="panel-orders" style="display:none">
-        <div id="orders-list"><p class="loading-text">Loading...</p></div>
+      <!-- Orders panel -->
+      <div id="panel-orders" class="hidden">
+        <div id="orders-list"><p class="text-center text-xl py-8 text-gray-400">Loading...</p></div>
       </div>
-
     </div>
   </div>
 
@@ -178,60 +127,74 @@
     import { api, isAdmin, toast, formatPrice, renderNav } from '/js/utils.js'
     renderNav('main-nav')
 
-    // Auth
     if (!isAdmin()) {
-      document.getElementById('access-denied').style.display = 'block'
+      document.getElementById('access-denied').classList.remove('hidden')
     } else {
-      document.getElementById('admin-panel').style.display = 'block'
+      document.getElementById('admin-panel').classList.remove('hidden')
       loadProducts()
     }
 
     window.switchTab = (tab) => {
-      document.getElementById('panel-products').style.display = tab === 'products' ? '' : 'none'
-      document.getElementById('panel-orders').style.display   = tab === 'orders'   ? '' : 'none'
-      document.getElementById('tab-products').classList.toggle('active', tab === 'products')
-      document.getElementById('tab-orders').classList.toggle('active', tab === 'orders')
-      if (tab === 'orders') loadOrders()
+      document.getElementById('panel-products').classList.toggle('hidden', tab !== 'products')
+      document.getElementById('panel-orders').classList.toggle('hidden', tab !== 'orders')
+      const tabP = document.getElementById('tab-products')
+      const tabO = document.getElementById('tab-orders')
+      if (tab === 'products') {
+        tabP.classList.add('tab-active'); tabP.classList.remove('text-gray-400')
+        tabO.classList.remove('tab-active'); tabO.classList.add('text-gray-400')
+      } else {
+        tabO.classList.add('tab-active'); tabO.classList.remove('text-gray-400')
+        tabP.classList.remove('tab-active'); tabP.classList.add('text-gray-400')
+        loadOrders()
+      }
     }
 
     document.getElementById('f-image').addEventListener('change', e => {
       const file = e.target.files[0]
-      const preview = document.getElementById('img-preview')
-      if (file) { preview.src = URL.createObjectURL(file); preview.classList.add('show') }
-      else { preview.classList.remove('show') }
+      const img  = document.getElementById('img-preview')
+      if (file) { img.src = URL.createObjectURL(file); img.classList.remove('hidden') }
+      else { img.classList.add('hidden') }
     })
 
     async function loadProducts() {
       const el = document.getElementById('products-list')
       try {
         const { products } = await api('/products?limit=100')
-        if (!products.length) { el.innerHTML = '<p class="loading-text">No products yet. Add one!</p>'; return }
-        el.innerHTML = products.map(p => `
-          <div class="product-row">
-            ${p.imageUrl
-              ? `<img src="${p.imageUrl}" alt="${p.name}"/>`
-              : '<div class="product-row-placeholder"></div>'
-            }
-            <div>
-              <h4>${p.name}</h4>
-              <p>${formatPrice(p.price)} &mdash; ${p.stock} in stock</p>
+        if (!products.length) { el.innerHTML = '<p class="text-xl py-8 text-gray-400">No products yet.</p>'; return }
+        el.innerHTML = '<div class="divide-y divide-gray-100">' + products.map(p => `
+          <div class="flex items-center gap-4 py-4">
+            <div class="w-16 h-16 shrink-0">
+              ${p.imageUrl
+                ? `<img src="${p.imageUrl}" class="w-full h-full object-cover"/>`
+                : '<div class="w-full h-full bg-gray-100"></div>'
+              }
             </div>
-            <div class="actions">
-              <button class="admin-btn" onclick="startEdit(${JSON.stringify(p).replace(/"/g, '&quot;')})">Edit</button>
-              <button class="admin-btn danger" onclick="deleteProduct('${p.id}', '${p.name.replace(/'/g,"\\'")}')">Delete</button>
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-base truncate m-0">${p.name}</p>
+              <p class="text-red-600 text-sm font-bold m-0">${formatPrice(p.price)}</p>
+              <p class="text-gray-400 text-xs m-0">${p.stock} in stock</p>
             </div>
-          </div>`).join('')
+            <div class="flex gap-2 shrink-0">
+              <button onclick="startEdit(${JSON.stringify(p).replace(/"/g,'&quot;')})"
+                class="px-3 py-1.5 border border-gray-200 bg-white text-sm cursor-pointer hover:bg-gray-100 font-[inherit] transition-colors">
+                Edit
+              </button>
+              <button onclick="deleteProduct('${p.id}','${p.name.replace(/'/g,"\\'")}'"
+                class="px-3 py-1.5 border border-red-200 text-red-600 bg-white text-sm cursor-pointer hover:bg-red-600 hover:text-white font-[inherit] transition-colors">
+                Delete
+              </button>
+            </div>
+          </div>`).join('') + '</div>'
       } catch(err) {
-        el.innerHTML = `<div class="error-message"><p><strong>Error:</strong> ${err.message}</p></div>`
+        el.innerHTML = `<div class="p-4 border-l-4 border-red-600 bg-red-50"><strong>Error:</strong> ${err.message}</div>`
       }
     }
 
     document.getElementById('product-form').addEventListener('submit', async e => {
       e.preventDefault()
       const errEl  = document.getElementById('form-error')
-      errEl.style.display = 'none'
+      errEl.classList.add('hidden')
       const editId = document.getElementById('edit-id').value
-
       const fd = new FormData()
       fd.append('name',        document.getElementById('f-name').value)
       fd.append('description', document.getElementById('f-desc').value)
@@ -239,25 +202,16 @@
       fd.append('stock',       document.getElementById('f-stock').value)
       const img = document.getElementById('f-image').files[0]
       if (img) fd.append('image', img)
-
       const fs  = document.getElementById('product-fs')
       const btn = document.getElementById('submit-btn')
-      fs.setAttribute('aria-busy','true'); fs.disabled = true
-      btn.textContent = 'Saving...'
-
+      fs.setAttribute('aria-busy','true'); fs.disabled = true; btn.textContent = 'Saving...'
       try {
-        if (editId) {
-          await api(`/products/${editId}`, { method: 'PATCH', body: fd })
-          toast('Product updated!')
-        } else {
-          await api('/products', { method: 'POST', body: fd })
-          toast('Product added! 🎉')
-        }
-        resetForm()
-        loadProducts()
+        if (editId) { await api(`/products/${editId}`, { method:'PATCH', body:fd }); toast('Updated!') }
+        else        { await api('/products',            { method:'POST',  body:fd }); toast('Added! 🎉') }
+        resetForm(); loadProducts()
       } catch(err) {
-        errEl.innerHTML = `<p><strong>Error:</strong> ${err.message}</p>`
-        errEl.style.display = 'block'
+        errEl.textContent = `Error: ${err.message}`
+        errEl.classList.remove('hidden')
       } finally {
         fs.removeAttribute('aria-busy'); fs.disabled = false
         btn.textContent = editId ? 'Save Changes!' : '+ Add Product!'
@@ -272,10 +226,10 @@
       document.getElementById('f-stock').value  = p.stock
       document.getElementById('form-heading').textContent = 'Edit Product'
       document.getElementById('submit-btn').textContent   = 'Save Changes!'
-      document.getElementById('cancel-btn').style.display = ''
+      document.getElementById('cancel-btn').classList.remove('hidden')
       if (p.imageUrl) {
-        const preview = document.getElementById('img-preview')
-        preview.src = p.imageUrl; preview.classList.add('show')
+        const img = document.getElementById('img-preview')
+        img.src = p.imageUrl; img.classList.remove('hidden')
       }
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
@@ -285,75 +239,72 @@
       document.getElementById('edit-id').value  = ''
       document.getElementById('form-heading').textContent = 'Add a Product'
       document.getElementById('submit-btn').textContent   = '+ Add Product!'
-      document.getElementById('cancel-btn').style.display = 'none'
-      document.getElementById('form-error').style.display = 'none'
-      document.getElementById('img-preview').classList.remove('show')
+      document.getElementById('cancel-btn').classList.add('hidden')
+      document.getElementById('form-error').classList.add('hidden')
+      document.getElementById('img-preview').classList.add('hidden')
     }
 
     window.deleteProduct = async (id, name) => {
       if (!confirm(`Delete "${name}"? This cannot be undone.`)) return
-      try {
-        await api(`/products/${id}`, { method: 'DELETE' })
-        toast(`"${name}" deleted`)
-        loadProducts()
-      } catch(err) { toast(err.message, 'error') }
+      try { await api(`/products/${id}`, { method:'DELETE' }); toast(`Deleted!`); loadProducts() }
+      catch(err) { toast(err.message, 'error') }
     }
 
     async function loadOrders() {
       const el = document.getElementById('orders-list')
-      el.innerHTML = '<p class="loading-text">Loading...</p>'
+      el.innerHTML = '<p class="text-center text-xl py-8 text-gray-400">Loading...</p>'
       try {
         const orders = await api('/orders/all')
-        if (!orders.length) { el.innerHTML = '<p class="loading-text">No orders yet.</p>'; return }
-        el.innerHTML = orders.map(order => `
-          <div class="order-admin-card">
-            <div class="order-admin-header">
+        if (!orders.length) { el.innerHTML = '<p class="text-center text-xl py-8 text-gray-400">No orders yet.</p>'; return }
+        const statusColors = { PENDING:'bg-yellow-100 text-yellow-800', PROCESSING:'bg-blue-100 text-blue-800', SHIPPED:'bg-purple-100 text-purple-800', DELIVERED:'bg-green-100 text-green-800' }
+        el.innerHTML = '<div class="space-y-6">' + orders.map(order => `
+          <div class="border border-gray-100 shadow-[0_12px_24px_0_rgba(0,0,0,0.09)] border-t-[6px] border-t-red-600 overflow-hidden">
+            <div class="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-4 p-5 bg-gray-50 border-b border-gray-100 items-center">
               <div>
-                <label>Customer</label>
-                <p>${order.user.name}</p>
-                <p style="font-size:1.1rem;color:#666">${order.user.email}</p>
+                <p class="text-xs uppercase font-bold text-gray-400 mb-1">Customer</p>
+                <p class="font-bold text-base m-0">${order.user.name}</p>
+                <p class="text-xs text-gray-400 m-0">${order.user.email}</p>
               </div>
               <div>
-                <label>Total</label>
-                <p style="color:var(--red);font-weight:900">${formatPrice(order.total)}</p>
+                <p class="text-xs uppercase font-bold text-gray-400 mb-1">Total</p>
+                <p class="font-black text-xl text-red-600 m-0">${formatPrice(order.total)}</p>
               </div>
               <div>
-                <label>Date</label>
-                <p>${new Date(order.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</p>
+                <p class="text-xs uppercase font-bold text-gray-400 mb-1">Date</p>
+                <p class="text-sm m-0">${new Date(order.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</p>
               </div>
               <div>
-                <label>Items</label>
-                <p>${order.items.reduce((s,i)=>s+i.quantity,0)}</p>
+                <p class="text-xs uppercase font-bold text-gray-400 mb-1">Items</p>
+                <p class="text-sm m-0">${order.items.reduce((s,i)=>s+i.quantity,0)}</p>
               </div>
               <div>
-                <label>Status</label>
-                <select class="order-status-select" onchange="updateStatus('${order.id}', this.value)">
+                <p class="text-xs uppercase font-bold text-gray-400 mb-1">Status</p>
+                <select onchange="updateStatus('${order.id}', this.value)"
+                  class="border border-gray-200 text-sm px-2 py-1 font-[inherit] cursor-pointer focus:outline-none focus:border-red-600 bg-white">
                   ${['PENDING','PROCESSING','SHIPPED','DELIVERED'].map(s =>
-                    `<option value="${s}" ${s === order.status ? 'selected':''}>${s}</option>`
+                    `<option value="${s}" ${s===order.status?'selected':''}>${s}</option>`
                   ).join('')}
                 </select>
               </div>
             </div>
-            <div class="order-admin-items">
+            <div class="p-4 flex flex-wrap gap-2">
               ${order.items.map(i => `
-                <div class="order-admin-item">
-                  ${i.product.imageUrl ? `<img src="${i.product.imageUrl}" style="width:40px;height:40px;object-fit:cover" alt="${i.product.name}"/>` : ''}
-                  <span>${i.product.name}</span>
-                  <span style="color:#666">×${i.quantity}</span>
-                  <span style="color:var(--red);font-weight:600">${formatPrice(i.price * i.quantity)}</span>
+                <div class="flex items-center gap-2 bg-gray-100 px-3 py-2 text-sm">
+                  ${i.product.imageUrl ? `<img src="${i.product.imageUrl}" class="w-8 h-8 object-cover"/>` : ''}
+                  <span class="font-bold">${i.product.name}</span>
+                  <span class="text-gray-500">&times;${i.quantity}</span>
+                  <span class="text-red-600 font-bold">${formatPrice(i.price*i.quantity)}</span>
                 </div>`).join('')}
             </div>
-          </div>`).join('')
+          </div>`).join('') + '</div>'
       } catch(err) {
-        el.innerHTML = `<div class="error-message"><p><strong>Error:</strong> ${err.message}</p></div>`
+        el.innerHTML = `<div class="p-4 border-l-4 border-red-600 bg-red-50"><strong>Error:</strong> ${err.message}</div>`
       }
     }
 
     window.updateStatus = async (id, status) => {
-      try {
-        await api(`/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) })
-        toast(`Status updated to ${status}`)
-      } catch(err) { toast(err.message, 'error') }
+      try { await api(`/orders/${id}/status`, { method:'PATCH', body:JSON.stringify({ status }) }); toast(`Status → ${status}`) }
+      catch(err) { toast(err.message, 'error') }
     }
   </script>
 </body>

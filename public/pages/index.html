@@ -4,88 +4,113 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sick Fits!</title>
-  <link rel="stylesheet" href="/css/global.css"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700;900&display=swap" rel="stylesheet"/>
+  <style>
+    body { font-family: 'Roboto Condensed', sans-serif; }
+    .nav-link::after {
+      content: ''; position: absolute; bottom: 0; left: 50%;
+      transform: translateX(-50%); width: 0; height: 2px;
+      background: #dc2626;
+      transition: width 0.4s cubic-bezier(1,-0.65,0,2.31);
+    }
+    .nav-link:hover::after { width: calc(100% - 2rem); }
+    .nav-link::before {
+      content: ''; position: absolute; left: 0; top: 0;
+      width: 2px; height: 100%;
+      background: #d1d5db;
+      transform: skewX(-20deg);
+    }
+    .cart-panel { transform: translateX(100%); transition: transform 0.3s ease; }
+    .cart-panel.open { transform: translateX(0); }
+  </style>
 </head>
-<body>
+<body class="bg-white text-[#393939]">
 
-  <header>
-    <div class="inner-header">
-      <div class="logo"><a href="/">Sick Fits</a></div>
-      <nav class="nav-links" id="main-nav"></nav>
+  <!-- Header -->
+  
+  <header class="bg-[#393939] sticky top-0 z-40">
+    <div class="flex items-stretch justify-between px-6 py-4">
+      <div class="text-5xl ml-6 relative z-10 self-center">
+        <a href="/" class="bg-red-600 text-white uppercase px-6 py-1 no-underline font-black skew-x-[-20deg] inline-block">
+          Sick Fits
+        </a>
+      </div>
+      <nav id="main-nav" class="flex flex-wrap justify-end text-2xl font-black uppercase"></nav>
     </div>
   </header>
 
-  <div class="page">
-    <p id="product-count" style="font-size:1.4rem"></p>
-    <div class="items-list" id="items-list"></div>
-    <div class="center">
-      <div class="pagination" id="pagination"></div>
+  <!-- Page -->
+  <div class="max-w-4xl mx-auto px-6 py-8">
+    <p id="product-count" class="text-lg text-gray-500 mb-6"></p>
+    <div id="items-list" class="grid grid-cols-2 gap-16 md:grid-cols-2 sm:grid-cols-1"></div>
+    <div class="text-center mt-8" id="pagination-wrap">
+      <div id="pagination" class="inline-flex flex-wrap border border-gray-200 rounded-lg overflow-hidden"></div>
     </div>
   </div>
 
-  <div class="cart-panel" id="cart-panel">
-    <button class="close-btn" onclick="window.toggleCart()">×</button>
-    <header>
-      <h2 class="supreme">Your Cart</h2>
+  <!-- Cart panel -->
+  <div id="cart-panel" class="cart-panel fixed top-0 right-0 bottom-0 w-2/5 min-w-[480px] bg-white shadow-2xl z-50 grid grid-rows-[auto_1fr_auto] p-5">
+    <header class="border-b-4 border-[#393939] mb-6 pb-5 relative">
+      <button onclick="window.toggleCart()" class="absolute right-0 top-0 bg-black text-white text-4xl border-0 px-4 py-1 cursor-pointer leading-none">&times;</button>
+      <h2 class="bg-red-600 text-white inline-block px-1.5 py-1 text-4xl font-black -skew-x-3 m-0">Your Cart</h2>
     </header>
-    <ul id="cart-items-list"></ul>
-    <footer>
-      <p id="cart-total"></p>
-      <button class="sick-button" id="checkout-btn" onclick="doCheckout()">Checkout</button>
+    <ul id="cart-items-list" class="m-0 p-0 list-none overflow-y-auto"></ul>
+    <footer class="border-t-8 border-double border-[#393939] pt-5 mt-5">
+      <p id="cart-total" class="m-0 text-4xl font-black"></p>
+      <button id="checkout-btn" onclick="doCheckout()"
+        class="mt-3 bg-red-600 text-white uppercase text-2xl font-medium px-6 py-3 -skew-x-2 border-0 cursor-pointer transition-opacity hover:opacity-85 w-full">
+        Checkout
+      </button>
     </footer>
   </div>
 
   <script type="module">
     import { api, getUser, isLoggedIn, toast, formatPrice, renderNav, updateCartBadge } from '/js/utils.js'
-
     renderNav('main-nav')
     updateCartBadge()
 
+    // ── Cart ─────────────────────────────────────────────
     window.toggleCart = () => {
       if (!isLoggedIn()) { window.location.href = '/pages/login.html'; return }
       const panel = document.getElementById('cart-panel')
-      const isOpen = panel.classList.contains('open')
-      if (isOpen) {
-        panel.classList.remove('open')
-      } else {
-        panel.classList.add('open')
-        loadCartPanel()
-      }
+      panel.classList.toggle('open')
+      if (panel.classList.contains('open')) loadCartPanel()
     }
 
     async function loadCartPanel() {
       const list  = document.getElementById('cart-items-list')
       const total = document.getElementById('cart-total')
-      list.innerHTML = '<li style="padding:2rem;font-size:1.4rem">Loading...</li>'
+      list.innerHTML = '<li class="p-6 text-xl">Loading...</li>'
       try {
         const { items, total: t } = await api('/cart')
         updateCartBadge()
         if (!items.length) {
-          list.innerHTML = '<li style="padding:2rem;font-size:1.4rem">Your cart is empty!</li>'
+          list.innerHTML = '<li class="p-6 text-xl text-gray-400">Your cart is empty!</li>'
           total.textContent = ''
           document.getElementById('checkout-btn').style.display = 'none'
           return
         }
         document.getElementById('checkout-btn').style.display = ''
         list.innerHTML = items.map(i => `
-          <li class="cart-item">
+          <li class="grid grid-cols-[80px_1fr_auto] items-center gap-4 py-4 border-b border-gray-100">
             ${i.product.imageUrl
-              ? `<img src="${i.product.imageUrl}" alt="${i.product.name}"/>`
-              : '<div style="width:80px;height:80px;background:var(--offWhite)"></div>'
+              ? `<img src="${i.product.imageUrl}" class="w-20 h-20 object-cover"/>`
+              : '<div class="w-20 h-20 bg-gray-100"></div>'
             }
             <div>
-              <h4>${i.product.name}</h4>
-              <p>${formatPrice(i.product.price)} × ${i.quantity}</p>
-              <p style="font-size:1.2rem;font-weight:600">${formatPrice(i.product.price * i.quantity)}</p>
+              <h4 class="m-0 text-lg font-bold">${i.product.name}</h4>
+              <p class="m-0 text-base text-gray-500">${formatPrice(i.product.price)} &times; ${i.quantity}</p>
+              <p class="m-0 text-base font-bold text-red-600">${formatPrice(i.product.price * i.quantity)}</p>
             </div>
-            <button
-              onclick="removeItem('${i.id}')"
-              style="background:none;border:0;font-size:3rem;cursor:pointer;color:var(--lightGray);line-height:1;padding:0"
-              title="Remove">&times;</button>
+            <button onclick="removeItem('${i.id}')"
+              class="bg-transparent border-0 text-4xl text-gray-300 cursor-pointer leading-none hover:text-red-600 transition-colors">
+              &times;
+            </button>
           </li>`).join('')
         total.textContent = `Total: ${formatPrice(t)}`
       } catch(err) {
-        list.innerHTML = `<li class="error-message"><p>${err.message}</p></li>`
+        list.innerHTML = `<li class="p-4 border-l-4 border-red-600 bg-red-50 text-red-700">${err.message}</li>`
       }
     }
 
@@ -108,11 +133,12 @@
       }
     }
 
+    // ── Products ──────────────────────────────────────────
     let currentPage = 1
 
     async function loadProducts(page = 1, search = '') {
       const list = document.getElementById('items-list')
-      list.innerHTML = '<p class="loading-text">Loading...</p>'
+      list.innerHTML = '<p class="col-span-2 text-center text-2xl py-12 text-gray-400">Loading...</p>'
       try {
         const { products, total, totalPages } = await api(
           `/products?page=${page}&limit=6&search=${encodeURIComponent(search)}`
@@ -122,37 +148,56 @@
           `${total} Product${total !== 1 ? 's' : ''} Found!`
 
         if (!products.length) {
-          list.innerHTML = '<p class="loading-text">No products found.</p>'
+          list.innerHTML = '<p class="col-span-2 text-center text-2xl py-12 text-gray-400">No products found.</p>'
           document.getElementById('pagination').innerHTML = ''
           return
         }
 
         list.innerHTML = products.map(p => `
-          <div class="item">
+          <div class="bg-white border border-gray-100 shadow-[0_12px_24px_0_rgba(0,0,0,0.09)] relative flex flex-col">
             <a href="/pages/product.html?id=${p.id}">
               ${p.imageUrl
-                ? `<img src="${p.imageUrl}" alt="${p.name}"/>`
-                : `<div style="width:100%;height:300px;background:var(--offWhite);display:flex;align-items:center;justify-content:center;color:var(--lightGray);font-size:1.5rem">No Image</div>`
+                ? `<img src="${p.imageUrl}" class="w-full h-[300px] object-cover"/>`
+                : `<div class="w-full h-[300px] bg-gray-100 flex items-center justify-center text-gray-300 text-2xl">No Image</div>`
               }
             </a>
-            <span class="price-tag">${formatPrice(p.price)}</span>
-            <h3 class="item-title">
-              <a href="/pages/product.html?id=${p.id}">${p.name}</a>
+            <span class="bg-red-600 text-white font-semibold px-1.5 py-1 text-3xl absolute top-0 right-0 rotate-3 leading-none">
+              ${formatPrice(p.price)}
+            </span>
+            <h3 class="mx-4 text-center -mt-10 skew-x-[-5deg] rotate-[-1deg] drop-shadow-[2px_2px_0_rgba(0,0,0,0.1)] m-0">
+              <a href="/pages/product.html?id=${p.id}"
+                class="bg-red-600 text-white px-3 inline leading-tight text-3xl no-underline hover:opacity-90">
+                ${p.name}
+              </a>
             </h3>
-            <p>${p.description}</p>
-            <div class="button-list">
-              <a href="/pages/product.html?id=${p.id}">Details</a>
+            <p class="leading-8 font-light flex-1 px-5 text-xl">${p.description}</p>
+            <div class="grid border-t border-gray-200 divide-x divide-gray-200"
+                 style="grid-template-columns:repeat(${getUser()?.role==='ADMIN'?3:2},1fr)">
+              <a href="/pages/product.html?id=${p.id}"
+                class="bg-white text-center text-sm py-3 px-2 no-underline text-[#393939] hover:bg-gray-100 transition-colors">
+                Details
+              </a>
               ${getUser()?.role === 'ADMIN'
-                ? `<a href="/pages/sell.html?id=${p.id}">Edit ✏️</a>
-                   <button onclick="delProduct('${p.id}', '${p.name.replace(/'/g, "\\'")}')">Delete ❌</button>`
-                : `<button onclick="addToCart('${p.id}')">Add To Cart 🛒</button>`
+                ? `<a href="/pages/sell.html?id=${p.id}"
+                     class="bg-white text-center text-sm py-3 px-2 no-underline text-[#393939] hover:bg-gray-100 transition-colors">
+                     Edit ✏️
+                   </a>
+                   <button onclick="delProduct('${p.id}','${p.name.replace(/'/g,"\\'")}'"
+                     class="bg-white text-center text-sm py-3 px-2 border-0 cursor-pointer font-[inherit] text-[#393939] hover:bg-red-600 hover:text-white transition-colors">
+                     Delete ❌
+                   </button>`
+                : `<button onclick="addToCart('${p.id}')"
+                     class="bg-white text-center text-sm py-3 px-2 border-0 cursor-pointer font-[inherit] text-[#393939] hover:bg-gray-100 transition-colors">
+                     Add To Cart 🛒
+                   </button>`
               }
             </div>
           </div>`).join('')
 
         renderPagination(page, totalPages, search)
       } catch(err) {
-        list.innerHTML = `<div class="error-message"><p><strong>Shoot!</strong> ${err.message}</p></div>`
+        list.innerHTML = `<div class="col-span-2 p-4 border-l-4 border-red-600 bg-red-50">
+          <p class="m-0"><strong>Shoot!</strong> ${err.message}</p></div>`
       }
     }
 
@@ -160,29 +205,29 @@
       const el = document.getElementById('pagination')
       if (total <= 1) { el.innerHTML = ''; return }
 
-      const prev = page > 1
-        ? `<button onclick="goto(${page - 1}, '${encodeURIComponent(search)}')">← Prev</button>`
-        : `<span class="disabled">← Prev</span>`
+      const btnClass = 'px-4 py-2 text-lg border-r border-gray-200 bg-white cursor-pointer font-[inherit] border-t-0 border-b-0 text-[#393939] hover:bg-gray-100 transition-colors'
+      const activeClass = 'px-4 py-2 text-lg border-r border-gray-200 bg-gray-100 cursor-pointer font-[inherit] border-t-0 border-b-0 text-[#393939]'
+      const disabledClass = 'px-4 py-2 text-lg border-r border-gray-200 text-gray-300 cursor-not-allowed'
 
-      const nums = Array.from({ length: total }, (_, i) => i + 1).map(n =>
-        `<button onclick="goto(${n}, '${encodeURIComponent(search)}')" class="${n === page ? 'active' : ''}">${n}</button>`
+      const prev = page > 1
+        ? `<button onclick="goto(${page-1},'${encodeURIComponent(search)}')" class="${btnClass}">← Prev</button>`
+        : `<span class="${disabledClass}">← Prev</span>`
+
+      const nums = Array.from({length:total},(_,i)=>i+1).map(n =>
+        `<button onclick="goto(${n},'${encodeURIComponent(search)}')" class="${n===page?activeClass:btnClass}">${n}</button>`
       ).join('')
 
       const next = page < total
-        ? `<button onclick="goto(${page + 1}, '${encodeURIComponent(search)}')">Next →</button>`
-        : `<span class="disabled">Next →</span>`
+        ? `<button onclick="goto(${page+1},'${encodeURIComponent(search)}')" class="${btnClass} border-r-0">Next →</button>`
+        : `<span class="${disabledClass} border-r-0">Next →</span>`
 
       el.innerHTML = prev + nums + next
     }
 
-    window.goto = (p, s) => loadProducts(p, decodeURIComponent(s))
+    window.goto     = (p, s) => loadProducts(p, decodeURIComponent(s))
 
     window.addToCart = async (productId) => {
-      if (!isLoggedIn()) {
-        toast('Please sign in first!')
-        window.location.href = '/pages/login.html'
-        return
-      }
+      if (!isLoggedIn()) { toast('Please sign in first!'); window.location.href='/pages/login.html'; return }
       try {
         await api('/cart', { method: 'POST', body: JSON.stringify({ productId }) })
         toast('Added to cart! 🛒')
@@ -193,11 +238,8 @@
 
     window.delProduct = async (id, name) => {
       if (!confirm(`Delete "${name}"? This cannot be undone.`)) return
-      try {
-        await api(`/products/${id}`, { method: 'DELETE' })
-        toast(`"${name}" deleted`)
-        loadProducts(currentPage)
-      } catch(err) { toast(err.message, 'error') }
+      try { await api(`/products/${id}`, { method: 'DELETE' }); toast(`"${name}" deleted`); loadProducts(currentPage) }
+      catch(err) { toast(err.message, 'error') }
     }
 
     loadProducts()
