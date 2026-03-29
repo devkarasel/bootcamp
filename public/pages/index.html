@@ -70,7 +70,6 @@
     renderNav('main-nav')
     updateCartBadge()
 
-    // ── Cart ─────────────────────────────────────────────
     window.toggleCart = () => {
       if (!isLoggedIn()) { window.location.href = '/pages/login.html'; return }
       const panel = document.getElementById('cart-panel')
@@ -132,8 +131,7 @@
         btn.disabled = false; btn.textContent = 'Checkout'
       }
     }
-
-    // ── Products ──────────────────────────────────────────
+    // Load products
     let currentPage = 1
 
     async function loadProducts(page = 1, search = '') {
