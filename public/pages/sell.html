@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sell — Sick Fits</title>
+  <link rel="stylesheet" href="/css/global.css"/>
+</head>
+<body>
+  <header>
+    <div class="inner-header">
+      <div class="logo"><a href="/">Sick Fits</a></div>
+      <nav class="nav-links" id="main-nav"></nav>
+    </div>
+  </header>
+  <div class="page">
+    <h1 class="supreme" id="form-heading">Sell an Item</h1>
+    <br/><br/>
+    <div id="form-error" class="error-message" style="display:none"></div>
+    <form id="sell-form" class="sick-form">
+      <fieldset id="sell-fs">
+        <label>Image
+          <input name="image" type="file" id="f-image" accept="image/*"/>
+        </label>
+        <img id="img-preview" style="display:none;max-width:300px;margin:1rem 0"/>
+        <label>Item Name
+          <input name="name" type="text" id="f-name" required placeholder="Name"/>
+        </label>
+        <label>Price
+          <input name="price" type="number" id="f-price" step="0.01" min="0" required placeholder="0.00"/>
+        </label>
+        <label>Stock
+          <input name="stock" type="number" id="f-stock" min="0" value="0" required/>
+        </label>
+        <label>Description
+          <textarea name="description" id="f-desc" required placeholder="Enter a description"></textarea>
+        </label>
+        <button type="submit" id="submit-btn">+ Add Item!</button>
+      </fieldset>
+    </form>
+  </div>
+  <script type="module">
+    import { api, getUser, toast, renderNav } from '/js/utils.js'
+    renderNav('main-nav')
+
+    const user = getUser()
+    if (!user || user.role !== 'ADMIN') {
+      document.querySelector('.page').innerHTML =
+        '<div class="error-message"><p><strong>Access Denied.</strong> Admins only.</p></div>'
+    }
+
+    const editId = new URLSearchParams(location.search).get('id')
+    if (editId) {
+      document.getElementById('form-heading').textContent = 'Edit Item'
+      document.getElementById('submit-btn').textContent = 'Save Changes!'
+      api(`/products/${editId}`).then(p => {
+        document.getElementById('f-name').value  = p.name
+        document.getElementById('f-price').value = (p.price / 100).toFixed(2)
+        document.getElementById('f-stock').value = p.stock
+        document.getElementById('f-desc').value  = p.description
+        if (p.imageUrl) {
+          const img = document.getElementById('img-preview')
+          img.src = p.imageUrl; img.style.display = 'block'
+        }
+      })
+    }
+
+    document.getElementById('f-image').addEventListener('change', e => {
+      const file = e.target.files[0]
+      if (!file) return
+      const img = document.getElementById('img-preview')
+      img.src = URL.createObjectURL(file); img.style.display = 'block'
+    })
+
+    document.getElementById('sell-form').addEventListener('submit', async e => {
+      e.preventDefault()
+      const errEl = document.getElementById('form-error')
+      errEl.style.display = 'none'
+      const fs = document.getElementById('sell-fs')
+      const btn = document.getElementById('submit-btn')
+      fs.setAttribute('aria-busy', 'true'); fs.disabled = true
+      btn.textContent = 'Saving...'
+
+      const fd = new FormData()
+      fd.append('name',        document.getElementById('f-name').value)
+      fd.append('description', document.getElementById('f-desc').value)
+      fd.append('price',       document.getElementById('f-price').value)
+      fd.append('stock',       document.getElementById('f-stock').value)
+      const img = document.getElementById('f-image').files[0]
+      if (img) fd.append('image', img)
+
+      try {
+        if (editId) {
+          await api(`/products/${editId}`, { method: 'PATCH', body: fd })
+          toast('Item updated!')
+        } else {
+          await api('/products', { method: 'POST', body: fd })
+          toast('Item added! 🎉')
+        }
+        window.location.href = '/'
+      } catch(err) {
+        errEl.innerHTML = `<p><strong>Error:</strong> ${err.message}</p>`
+        errEl.style.display = 'block'
+      } finally {
+        fs.removeAttribute('aria-busy'); fs.disabled = false
+        btn.textContent = editId ? 'Save Changes!' : '+ Add Item!'
+      }
+    })
+  </script>
+</body>
+</html>

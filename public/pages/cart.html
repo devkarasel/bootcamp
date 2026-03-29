@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Your Cart — Sick Fits</title>
+  <link rel="stylesheet" href="/css/global.css"/>
+  <style>
+    .cart-layout { display: grid; grid-template-columns: 1fr 300px; gap: 4rem; align-items: start; }
+    .cart-totals { background: var(--offWhite); padding: 2rem; }
+    .cart-totals h3 { border-bottom: 3px solid var(--lightGrey); padding-bottom: 1rem; font-size: 2rem; }
+    .cart-totals li { display: flex; justify-content: space-between; list-style: none; padding: 0.5rem 0; font-size: 1.4rem; }
+    .cart-totals ul { padding: 0; margin: 0; }
+    .checkout-btn { width: 100%; margin-top: 2rem; font-size: 1.5rem; padding: 1rem; }
+    .cart-item-qty { display: flex; align-items: center; gap: 1rem; }
+    .cart-item-qty button { background: var(--lightGrey); border: 0; width: 3rem; height: 3rem; font-size: 1.8rem; cursor: pointer; font-family: inherit; }
+    .cart-item-qty button:hover { background: var(--red); color: white; }
+    @media (max-width:700px) { .cart-layout { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="bar">
+      <div class="inner-nav">
+        <div class="logo"><a href="/">Sick Fits</a></div>
+        <nav class="nav-links" id="main-nav"></nav>
+      </div>
+    </div>
+  </header>
+  <div class="page-wrapper">
+    <h2 style="font-size:3rem;border-bottom:5px solid var(--offWhite);padding-bottom:2rem;margin-bottom:3rem">Your Cart</h2>
+    <div id="cart-container"><p class="loading">Loading...</p></div>
+  </div>
+  <script type="module">
+    import { api, isLoggedIn, toast, formatPrice, updateCartBadge, renderNav } from '/js/utils.js'
+    renderNav('main-nav')
+
+    if (!isLoggedIn()) {
+      document.getElementById('cart-container').innerHTML = `
+        <div class="error-message"><p><strong>Please sign in</strong> to view your cart.</p></div>
+        <a href="/pages/login.html" class="btn">Sign In</a>`
+    } else { loadCart() }
+
+    async function loadCart() {
+      try {
+        const { items, total } = await api('/cart')
+        updateCartBadge()
+        if (!items.length) {
+          document.getElementById('cart-container').innerHTML = `<p style="font-size:2rem">Your cart is empty! <a href="/">Keep shopping →</a></p>`
+          return
+        }
+        document.getElementById('cart-container').innerHTML = `
+          <div class="cart-layout">
+            <div id="cart-items">
+              ${items.map(item => `
+                <div class="cart-item" id="ci-${item.id}">
+                  ${item.product.imageUrl ? `<img src="${item.product.imageUrl}" alt="${item.product.name}"/>` : `<div style="width:100px;height:100px;background:var(--offWhite)"></div>`}
+                  <div>
+                    <h3>${item.product.name}</h3>
+                    <p>${formatPrice(item.product.price)} × ${item.quantity} = <strong>${formatPrice(item.product.price * item.quantity)}</strong></p>
+                    <div class="cart-item-qty">
+                      <button onclick="changeQty('${item.id}',${item.quantity-1})">−</button>
+                      <span>${item.quantity}</span>
+                      <button onclick="changeQty('${item.id}',${item.quantity+1})">+</button>
+                    </div>
+                  </div>
+                  <button onclick="removeItem('${item.id}')" style="background:none;border:0;font-size:3rem;cursor:pointer;color:var(--lightGrey);align-self:flex-start" title="Remove">×</button>
+                </div>`).join('')}
+            </div>
+            <div>
+              <div class="cart-totals">
+                <h3>Your Total</h3>
+                <ul>
+                  ${items.map(i=>`<li><span>${i.product.name} ×${i.quantity}</span><span>${formatPrice(i.product.price*i.quantity)}</span></li>`).join('')}
+                  <li style="font-weight:900;font-size:1.6rem;border-top:3px solid var(--lightGrey);margin-top:1rem;padding-top:1rem"><span>Total</span><span>${formatPrice(total)}</span></li>
+                </ul>
+                <button class="btn checkout-btn" id="checkout-btn" onclick="checkout()">Checkout →</button>
+              </div>
+            </div>
+          </div>`
+      } catch(err) {
+        document.getElementById('cart-container').innerHTML = `<div class="error-message"><p><strong>Error:</strong> ${err.message}</p></div>`
+      }
+    }
+
+    window.changeQty = async (id, qty) => {
+      if (qty < 1) return removeItem(id)
+      try { await api(`/cart/${id}`,{method:'PATCH',body:JSON.stringify({quantity:qty})}); loadCart() }
+      catch(err) { toast(err.message,'error') }
+    }
+    window.removeItem = async (id) => {
+      try { await api(`/cart/${id}`,{method:'DELETE'}); toast('Removed!'); loadCart() }
+      catch(err) { toast(err.message,'error') }
+    }
+    window.checkout = async () => {
+      const btn = document.getElementById('checkout-btn')
+      btn.disabled = true; btn.textContent = 'Placing Order...'
+      try { await api('/orders',{method:'POST'}); toast('Order placed! 🎉'); window.location.href='/pages/orders.html' }
+      catch(err) { toast(err.message,'error'); btn.disabled=false; btn.textContent='Checkout →' }
+    }
+  </script>
+</body>
+</html>

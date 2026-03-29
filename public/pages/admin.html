@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin — Sick Fits</title>
+  <link rel="stylesheet" href="/css/global.css"/>
+  <style>
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 4rem;
+      align-items: start;
+    }
+    @media (max-width: 800px) { .admin-grid { grid-template-columns: 1fr; } }
+
+    .tab-bar {
+      display: flex;
+      border-bottom: 5px solid var(--offWhite);
+      margin-bottom: 3rem;
+    }
+    .tab-btn {
+      background: none;
+      border: 0;
+      font-family: inherit;
+      font-size: 1.5rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      padding: 1rem 2rem;
+      cursor: pointer;
+      color: var(--lightGray);
+      border-bottom: 5px solid transparent;
+      margin-bottom: -5px;
+    }
+    .tab-btn.active { color: var(--red); border-bottom-color: var(--red); }
+    .tab-btn:hover { color: var(--black); }
+
+    .product-row {
+      display: grid;
+      grid-template-columns: 60px 1fr auto;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--lightGray);
+    }
+    .product-row img { width: 60px; height: 60px; object-fit: cover; }
+    .product-row-placeholder { width: 60px; height: 60px; background: var(--offWhite); }
+    .product-row h4 { margin: 0; font-size: 1.4rem; }
+    .product-row p  { margin: 0; font-size: 1.2rem; color: var(--grey, #666); }
+    .product-row .actions { display: flex; gap: 0.5rem; }
+
+    .admin-btn {
+      background: none;
+      border: 1px solid var(--lightGray);
+      font-family: inherit;
+      font-size: 1.1rem;
+      padding: 0.4rem 1rem;
+      cursor: pointer;
+      color: var(--black);
+    }
+    .admin-btn:hover { background: var(--offWhite); }
+    .admin-btn.danger { border-color: var(--red); color: var(--red); }
+    .admin-btn.danger:hover { background: var(--red); color: white; }
+
+     /* Order card  */
+    .order-admin-card {
+      border: 1px solid var(--offWhite);
+      box-shadow: var(--bs);
+      margin-bottom: 2rem;
+      border-top: 5px solid var(--red);
+    }
+    .order-admin-header {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr auto;
+      gap: 1rem;
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--offWhite);
+      background: rgba(0,0,0,0.02);
+      align-items: center;
+    }
+    @media (max-width: 700px) { .order-admin-header { grid-template-columns: 1fr 1fr; } }
+    .order-admin-header label { font-size: 1rem; font-weight: 900; text-transform: uppercase; color: var(--lightGray); display: block; margin-bottom: 0.3rem; }
+    .order-admin-header p { margin: 0; font-size: 1.3rem; }
+    .order-admin-items { padding: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; }
+    .order-admin-item {
+      background: var(--offWhite);
+      padding: 0.5rem 1rem;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .order-status-select {
+      font-family: inherit;
+      font-size: 1.2rem;
+      padding: 0.4rem 0.8rem;
+      border: 1px solid var(--lightGray);
+      background: white;
+      cursor: pointer;
+    }
+    .order-status-select:focus { outline: 0; border-color: var(--red); }
+
+    #img-preview { display:none; max-width:100%; max-height:200px; object-fit:cover; margin-top:1rem; }
+    #img-preview.show { display:block; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="inner-header">
+      <div class="logo"><a href="/">Sick Fits</a></div>
+      <nav class="nav-links" id="main-nav"></nav>
+    </div>
+  </header>
+
+  <div class="page">
+
+    <!-- Access denied -->
+    <div id="access-denied" style="display:none">
+      <div class="error-message">
+        <p><strong>Access Denied.</strong> You must be an admin to view this page.</p>
+      </div>
+      <a href="/" class="sick-button">← Go Home</a>
+    </div>
+
+    <!-- Admin panel -->
+    <div id="admin-panel" style="display:none">
+      <h1 class="supreme">Admin Panel</h1>
+      <br/><br/>
+
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab-products" onclick="switchTab('products')">Products</button>
+        <button class="tab-btn" id="tab-orders" onclick="switchTab('orders')">Orders</button>
+      </div>
+
+      <div id="panel-products">
+        <div class="admin-grid">
+
+          <div>
+            <h2 id="form-heading" style="font-size:2rem;margin-top:0">Add a Product</h2>
+            <div id="form-error" class="error-message" style="display:none"></div>
+            <form id="product-form" class="sick-form">
+              <fieldset id="product-fs">
+                <label>Image
+                  <input name="image" type="file" id="f-image" accept="image/*"/>
+                </label>
+                <img id="img-preview" class="" alt="preview"/>
+                <label>Name
+                  <input name="name" type="text" id="f-name" required placeholder="Product name"/>
+                </label>
+                <label>Price ($)
+                  <input name="price" type="number" id="f-price" step="0.01" min="0" required placeholder="0.00"/>
+                </label>
+                <label>Stock
+                  <input name="stock" type="number" id="f-stock" min="0" value="0" required/>
+                </label>
+                <label>Description
+                  <textarea name="description" id="f-desc" required placeholder="Describe the product..."></textarea>
+                </label>
+                <input type="hidden" id="edit-id"/>
+                <button type="submit" id="submit-btn">+ Add Product!</button>
+                <button type="button" id="cancel-btn" onclick="resetForm()" style="display:none;background:var(--lightGray);color:var(--black);margin-left:1rem">Cancel</button>
+              </fieldset>
+            </form>
+          </div>
+
+          <div>
+            <h2 style="font-size:2rem;margin-top:0">All Products</h2>
+            <div id="products-list"><p class="loading-text">Loading...</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel-orders" style="display:none">
+        <div id="orders-list"><p class="loading-text">Loading...</p></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module">
+    import { api, isAdmin, toast, formatPrice, renderNav } from '/js/utils.js'
+    renderNav('main-nav')
+
+    // Auth
+    if (!isAdmin()) {
+      document.getElementById('access-denied').style.display = 'block'
+    } else {
+      document.getElementById('admin-panel').style.display = 'block'
+      loadProducts()
+    }
+
+    window.switchTab = (tab) => {
+      document.getElementById('panel-products').style.display = tab === 'products' ? '' : 'none'
+      document.getElementById('panel-orders').style.display   = tab === 'orders'   ? '' : 'none'
+      document.getElementById('tab-products').classList.toggle('active', tab === 'products')
+      document.getElementById('tab-orders').classList.toggle('active', tab === 'orders')
+      if (tab === 'orders') loadOrders()
+    }
+
+    document.getElementById('f-image').addEventListener('change', e => {
+      const file = e.target.files[0]
+      const preview = document.getElementById('img-preview')
+      if (file) { preview.src = URL.createObjectURL(file); preview.classList.add('show') }
+      else { preview.classList.remove('show') }
+    })
+    // load products
+    async function loadProducts() {
+      const el = document.getElementById('products-list')
+      try {
+        const { products } = await api('/products?limit=100')
+        if (!products.length) { el.innerHTML = '<p class="loading-text">No products yet. Add one!</p>'; return }
+        el.innerHTML = products.map(p => `
+          <div class="product-row">
+            ${p.imageUrl
+              ? `<img src="${p.imageUrl}" alt="${p.name}"/>`
+              : '<div class="product-row-placeholder"></div>'
+            }
+            <div>
+              <h4>${p.name}</h4>
+              <p>${formatPrice(p.price)} &mdash; ${p.stock} in stock</p>
+            </div>
+            <div class="actions">
+              <button class="admin-btn" onclick="startEdit(${JSON.stringify(p).replace(/"/g, '&quot;')})">Edit</button>
+              <button class="admin-btn danger" onclick="deleteProduct('${p.id}', '${p.name.replace(/'/g,"\\'")}')">Delete</button>
+            </div>
+          </div>`).join('')
+      } catch(err) {
+        el.innerHTML = `<div class="error-message"><p><strong>Error:</strong> ${err.message}</p></div>`
+      }
+    }
+
+    document.getElementById('product-form').addEventListener('submit', async e => {
+      e.preventDefault()
+      const errEl  = document.getElementById('form-error')
+      errEl.style.display = 'none'
+      const editId = document.getElementById('edit-id').value
+
+      const fd = new FormData()
+      fd.append('name',        document.getElementById('f-name').value)
+      fd.append('description', document.getElementById('f-desc').value)
+      fd.append('price',       document.getElementById('f-price').value)
+      fd.append('stock',       document.getElementById('f-stock').value)
+      const img = document.getElementById('f-image').files[0]
+      if (img) fd.append('image', img)
+
+      const fs  = document.getElementById('product-fs')
+      const btn = document.getElementById('submit-btn')
+      fs.setAttribute('aria-busy','true'); fs.disabled = true
+      btn.textContent = 'Saving...'
+
+      try {
+        if (editId) {
+          await api(`/products/${editId}`, { method: 'PATCH', body: fd })
+          toast('Product updated!')
+        } else {
+          await api('/products', { method: 'POST', body: fd })
+          toast('Product added! 🎉')
+        }
+        resetForm()
+        loadProducts()
+      } catch(err) {
+        errEl.innerHTML = `<p><strong>Error:</strong> ${err.message}</p>`
+        errEl.style.display = 'block'
+      } finally {
+        fs.removeAttribute('aria-busy'); fs.disabled = false
+        btn.textContent = editId ? 'Save Changes!' : '+ Add Product!'
+      }
+    })
+
+    window.startEdit = (p) => {
+      document.getElementById('edit-id').value  = p.id
+      document.getElementById('f-name').value   = p.name
+      document.getElementById('f-desc').value   = p.description
+      document.getElementById('f-price').value  = (p.price / 100).toFixed(2)
+      document.getElementById('f-stock').value  = p.stock
+      document.getElementById('form-heading').textContent = 'Edit Product'
+      document.getElementById('submit-btn').textContent   = 'Save Changes!'
+      document.getElementById('cancel-btn').style.display = ''
+      if (p.imageUrl) {
+        const preview = document.getElementById('img-preview')
+        preview.src = p.imageUrl; preview.classList.add('show')
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
+    window.resetForm = () => {
+      document.getElementById('product-form').reset()
+      document.getElementById('edit-id').value  = ''
+      document.getElementById('form-heading').textContent = 'Add a Product'
+      document.getElementById('submit-btn').textContent   = '+ Add Product!'
+      document.getElementById('cancel-btn').style.display = 'none'
+      document.getElementById('form-error').style.display = 'none'
+      document.getElementById('img-preview').classList.remove('show')
+    }
+
+    window.deleteProduct = async (id, name) => {
+      if (!confirm(`Delete "${name}"? This cannot be undone.`)) return
+      try {
+        await api(`/products/${id}`, { method: 'DELETE' })
+        toast(`"${name}" deleted`)
+        loadProducts()
+      } catch(err) { toast(err.message, 'error') }
+    }
+
+    async function loadOrders() {
+      const el = document.getElementById('orders-list')
+      el.innerHTML = '<p class="loading-text">Loading...</p>'
+      try {
+        const orders = await api('/orders/all')
+        if (!orders.length) { el.innerHTML = '<p class="loading-text">No orders yet.</p>'; return }
+        el.innerHTML = orders.map(order => `
+          <div class="order-admin-card">
+            <div class="order-admin-header">
+              <div>
+                <label>Customer</label>
+                <p>${order.user.name}</p>
+                <p style="font-size:1.1rem;color:#666">${order.user.email}</p>
+              </div>
+              <div>
+                <label>Total</label>
+                <p style="color:var(--red);font-weight:900">${formatPrice(order.total)}</p>
+              </div>
+              <div>
+                <label>Date</label>
+                <p>${new Date(order.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</p>
+              </div>
+              <div>
+                <label>Items</label>
+                <p>${order.items.reduce((s,i)=>s+i.quantity,0)}</p>
+              </div>
+              <div>
+                <label>Status</label>
+                <select class="order-status-select" onchange="updateStatus('${order.id}', this.value)">
+                  ${['PENDING','PROCESSING','SHIPPED','DELIVERED'].map(s =>
+                    `<option value="${s}" ${s === order.status ? 'selected':''}>${s}</option>`
+                  ).join('')}
+                </select>
+              </div>
+            </div>
+            <div class="order-admin-items">
+              ${order.items.map(i => `
+                <div class="order-admin-item">
+                  ${i.product.imageUrl ? `<img src="${i.product.imageUrl}" style="width:40px;height:40px;object-fit:cover" alt="${i.product.name}"/>` : ''}
+                  <span>${i.product.name}</span>
+                  <span style="color:#666">×${i.quantity}</span>
+                  <span style="color:var(--red);font-weight:600">${formatPrice(i.price * i.quantity)}</span>
+                </div>`).join('')}
+            </div>
+          </div>`).join('')
+      } catch(err) {
+        el.innerHTML = `<div class="error-message"><p><strong>Error:</strong> ${err.message}</p></div>`
+      }
+    }
+
+    window.updateStatus = async (id, status) => {
+      try {
+        await api(`/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) })
+        toast(`Status updated to ${status}`)
+      } catch(err) { toast(err.message, 'error') }
+    }
+  </script>
+</body>
+</html>

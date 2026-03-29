@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up — Sick Fits</title>
+  <link rel="stylesheet" href="/css/global.css"/>
+</head>
+<body>
+  <header class="site-header">
+    <div class="bar">
+      <div class="inner-nav">
+        <div class="logo"><a href="/">Sick Fits</a></div>
+        <nav class="nav-links" id="main-nav"></nav>
+      </div>
+    </div>
+  </header>
+  <div class="page-wrapper" style="max-width:600px">
+    <h2 style="font-size:2.5rem;border-bottom:5px solid var(--offWhite);padding-bottom:2rem;margin-bottom:2rem">Sign Up For An Account</h2>
+    <div id="signup-error" class="error-message" style="display:none"></div>
+    <form id="signup-form">
+      <fieldset>
+        <label><span>Name</span><input name="name" type="text" required placeholder="Your Name" autocomplete="name"/></label>
+        <label><span>Email</span><input name="email" type="email" required placeholder="your@email.com" autocomplete="email"/></label>
+        <label><span>Password</span><input name="password" type="password" required minlength="6" autocomplete="new-password"/></label>
+        <button type="submit" class="btn">Sign Up!</button>
+      </fieldset>
+    </form>
+    <p style="margin-top:2rem;font-size:1.3rem">Already have an account? <a href="/pages/login.html">Sign In →</a></p>
+  </div>
+  <script type="module">
+    import { api, renderNav } from '/js/utils.js'
+    renderNav('main-nav')
+    document.getElementById('signup-form').addEventListener('submit', async e => {
+      e.preventDefault()
+      const errEl = document.getElementById('signup-error')
+      errEl.style.display = 'none'
+      const btn = e.target.querySelector('button')
+      btn.textContent = 'Signing up...'; btn.disabled = true
+      const data = Object.fromEntries(new FormData(e.target))
+      try {
+        const { token, user } = await api('/auth/signup', { method: 'POST', body: JSON.stringify(data) })
+        localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(user))
+        window.location.href = '/'
+      } catch(err) {
+        errEl.innerHTML = `<p><strong>Error:</strong> ${err.message}</p>`
+        errEl.style.display = 'block'
+        btn.textContent = 'Sign Up!'; btn.disabled = false
+      }
+    })
+  </script>
+</body>
+</html>

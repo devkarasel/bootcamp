@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In — Sick Fits</title>
+  <link rel="stylesheet" href="/css/global.css"/>
+  <style>
+    .auth-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3rem; }
+    @media (max-width: 900px) { .auth-grid { grid-template-columns: 1fr; } }
+    .auth-grid h2 { font-size: 2rem; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="inner-header">
+      <div class="logo"><a href="/">Sick Fits</a></div>
+      <nav class="nav-links" id="main-nav"></nav>
+    </div>
+  </header>
+  <div class="page">
+    <div class="auth-grid">
+
+      <!-- Sign In -->
+      <div>
+        <h2>Sign Into Your Account</h2>
+        <div id="login-error" class="error-message" style="display:none"></div>
+        <form id="login-form" class="sick-form">
+          <fieldset id="login-fs">
+            <label>Email
+              <input name="email" type="email" required placeholder="your@email.com" autocomplete="email"/>
+            </label>
+            <label>Password
+              <input name="password" type="password" required autocomplete="current-password"/>
+            </label>
+            <button type="submit">Sign In!</button>
+          </fieldset>
+        </form>
+      </div>
+
+      <!-- Sign Up -->
+      <div>
+        <h2>Sign Up For an Account</h2>
+        <div id="signup-error" class="error-message" style="display:none"></div>
+        <form id="signup-form" class="sick-form">
+          <fieldset id="signup-fs">
+            <label>Your Name
+              <input name="name" type="text" required placeholder="Your Name" autocomplete="name"/>
+            </label>
+            <label>Email
+              <input name="email" type="email" required placeholder="your@email.com" autocomplete="email"/>
+            </label>
+            <label>Password
+              <input name="password" type="password" required minlength="6" autocomplete="new-password"/>
+            </label>
+            <button type="submit">Sign Up!</button>
+          </fieldset>
+        </form>
+      </div>
+
+      <!-- Request Reset -->
+      <div>
+        <h2>Request a Password Reset</h2>
+        <form id="reset-form" class="sick-form">
+          <fieldset>
+            <label>Email
+              <input name="email" type="email" placeholder="your@email.com"/>
+            </label>
+            <button type="submit">Request Reset</button>
+          </fieldset>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module">
+    import { api, renderNav, toast } from '/js/utils.js'
+    renderNav('main-nav')
+
+    document.getElementById('login-form').addEventListener('submit', async e => {
+      e.preventDefault()
+      const errEl = document.getElementById('login-error')
+      errEl.style.display = 'none'
+      // Collect data BEFORE disabling fieldset
+      const data = Object.fromEntries(new FormData(e.target))
+      const fs  = document.getElementById('login-fs')
+      fs.setAttribute('aria-busy', 'true')
+      fs.disabled = true
+      try {
+        const { token, user } = await api('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify(data)
+        })
+        localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(user))
+        window.location.href = '/'
+      } catch(err) {
+        errEl.innerHTML = `<p><strong>Error:</strong> ${err.message}</p>`
+        errEl.style.display = 'block'
+        fs.removeAttribute('aria-busy')
+        fs.disabled = false
+      }
+    })
+
+    document.getElementById('signup-form').addEventListener('submit', async e => {
+      e.preventDefault()
+      const errEl = document.getElementById('signup-error')
+      errEl.style.display = 'none'
+      // ✅ collect data BEFORE disabling fieldset
+      const data = Object.fromEntries(new FormData(e.target))
+      const fs  = document.getElementById('signup-fs')
+      fs.setAttribute('aria-busy', 'true')
+      fs.disabled = true
+      try {
+        const { token, user } = await api('/auth/signup', {
+          method: 'POST',
+          body: JSON.stringify(data)
+        })
+        localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(user))
+        window.location.href = '/'
+      } catch(err) {
+        errEl.innerHTML = `<p><strong>Error:</strong> ${err.message}</p>`
+        errEl.style.display = 'block'
+        fs.removeAttribute('aria-busy')
+        fs.disabled = false
+      }
+    })
+
+    document.getElementById('reset-form').addEventListener('submit', e => {
+      e.preventDefault()
+      toast('Password reset coming soon!')
+    })
+  </script>
+</body>
+</html>

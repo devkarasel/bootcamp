@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sick Fits!</title>
+  <link rel="stylesheet" href="/css/global.css"/>
+</head>
+<body>
+
+  <header>
+    <div class="inner-header">
+      <div class="logo"><a href="/">Sick Fits</a></div>
+      <nav class="nav-links" id="main-nav"></nav>
+    </div>
+  </header>
+
+  <div class="page">
+    <p id="product-count" style="font-size:1.4rem"></p>
+    <div class="items-list" id="items-list"></div>
+    <div class="center">
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+
+  <!-- Cart slide-in panel -->
+  <div class="cart-panel" id="cart-panel">
+    <button class="close-btn" onclick="window.toggleCart()">×</button>
+    <header>
+      <h2 class="supreme">Your Cart</h2>
+    </header>
+    <ul id="cart-items-list"></ul>
+    <footer>
+      <p id="cart-total"></p>
+      <button class="sick-button" id="checkout-btn" onclick="doCheckout()">Checkout</button>
+    </footer>
+  </div>
+
+  <script type="module">
+    import { api, getUser, isLoggedIn, toast, formatPrice, renderNav, updateCartBadge } from '/js/utils.js'
+
+    renderNav('main-nav')
+    updateCartBadge()
+
+    // ── Cart toggle ───────────────────────────────────────
+    window.toggleCart = () => {
+      if (!isLoggedIn()) { window.location.href = '/pages/login.html'; return }
+      const panel = document.getElementById('cart-panel')
+      const isOpen = panel.classList.contains('open')
+      if (isOpen) {
+        panel.classList.remove('open')
+      } else {
+        panel.classList.add('open')
+        loadCartPanel()
+      }
+    }
+
+    async function loadCartPanel() {
+      const list  = document.getElementById('cart-items-list')
+      const total = document.getElementById('cart-total')
+      list.innerHTML = '<li style="padding:2rem;font-size:1.4rem">Loading...</li>'
+      try {
+        const { items, total: t } = await api('/cart')
+        updateCartBadge()
+        if (!items.length) {
+          list.innerHTML = '<li style="padding:2rem;font-size:1.4rem">Your cart is empty!</li>'
+          total.textContent = ''
+          document.getElementById('checkout-btn').style.display = 'none'
+          return
+        }
+        document.getElementById('checkout-btn').style.display = ''
+        list.innerHTML = items.map(i => `
+          <li class="cart-item">
+            ${i.product.imageUrl
+              ? `<img src="${i.product.imageUrl}" alt="${i.product.name}"/>`
+              : '<div style="width:80px;height:80px;background:var(--offWhite)"></div>'
+            }
+            <div>
+              <h4>${i.product.name}</h4>
+              <p>${formatPrice(i.product.price)} × ${i.quantity}</p>
+              <p style="font-size:1.2rem;font-weight:600">${formatPrice(i.product.price * i.quantity)}</p>
+            </div>
+            <button
+              onclick="removeItem('${i.id}')"
+              style="background:none;border:0;font-size:3rem;cursor:pointer;color:var(--lightGray);line-height:1;padding:0"
+              title="Remove">&times;</button>
+          </li>`).join('')
+        total.textContent = `Total: ${formatPrice(t)}`
+      } catch(err) {
+        list.innerHTML = `<li class="error-message"><p>${err.message}</p></li>`
+      }
+    }
+
+    window.removeItem = async (id) => {
+      try { await api(`/cart/${id}`, { method: 'DELETE' }); loadCartPanel() }
+      catch(err) { toast(err.message, 'error') }
+    }
+
+    window.doCheckout = async () => {
+      const btn = document.getElementById('checkout-btn')
+      btn.disabled = true; btn.textContent = 'Placing Order...'
+      try {
+        await api('/orders', { method: 'POST' })
+        toast('Order placed! 🎉')
+        document.getElementById('cart-panel').classList.remove('open')
+        window.location.href = '/pages/orders.html'
+      } catch(err) {
+        toast(err.message, 'error')
+        btn.disabled = false; btn.textContent = 'Checkout'
+      }
+    }
+
+    // ── Products ──────────────────────────────────────────
+    let currentPage = 1
+
+    async function loadProducts(page = 1, search = '') {
+      const list = document.getElementById('items-list')
+      list.innerHTML = '<p class="loading-text">Loading...</p>'
+      try {
+        const { products, total, totalPages } = await api(
+          `/products?page=${page}&limit=6&search=${encodeURIComponent(search)}`
+        )
+        currentPage = page
+        document.getElementById('product-count').textContent =
+          `${total} Product${total !== 1 ? 's' : ''} Found!`
+
+        if (!products.length) {
+          list.innerHTML = '<p class="loading-text">No products found.</p>'
+          document.getElementById('pagination').innerHTML = ''
+          return
+        }
+
+        list.innerHTML = products.map(p => `
+          <div class="item">
+            <a href="/pages/product.html?id=${p.id}">
+              ${p.imageUrl
+                ? `<img src="${p.imageUrl}" alt="${p.name}"/>`
+                : `<div style="width:100%;height:300px;background:var(--offWhite);display:flex;align-items:center;justify-content:center;color:var(--lightGray);font-size:1.5rem">No Image</div>`
+              }
+            </a>
+            <span class="price-tag">${formatPrice(p.price)}</span>
+            <h3 class="item-title">
+              <a href="/pages/product.html?id=${p.id}">${p.name}</a>
+            </h3>
+            <p>${p.description}</p>
+            <div class="button-list">
+              <a href="/pages/product.html?id=${p.id}">Details</a>
+              ${getUser()?.role === 'ADMIN'
+                ? `<a href="/pages/sell.html?id=${p.id}">Edit ✏️</a>
+                   <button onclick="delProduct('${p.id}', '${p.name.replace(/'/g, "\\'")}')">Delete ❌</button>`
+                : `<button onclick="addToCart('${p.id}')">Add To Cart 🛒</button>`
+              }
+            </div>
+          </div>`).join('')
+
+        renderPagination(page, totalPages, search)
+      } catch(err) {
+        list.innerHTML = `<div class="error-message"><p><strong>Shoot!</strong> ${err.message}</p></div>`
+      }
+    }
+
+    // ✅ Fixed pagination — no fixed 4-column grid, uses flex in CSS
+    function renderPagination(page, total, search) {
+      const el = document.getElementById('pagination')
+      if (total <= 1) { el.innerHTML = ''; return }
+
+      const prev = page > 1
+        ? `<button onclick="goto(${page - 1}, '${encodeURIComponent(search)}')">← Prev</button>`
+        : `<span class="disabled">← Prev</span>`
+
+      const nums = Array.from({ length: total }, (_, i) => i + 1).map(n =>
+        `<button onclick="goto(${n}, '${encodeURIComponent(search)}')" class="${n === page ? 'active' : ''}">${n}</button>`
+      ).join('')
+
+      const next = page < total
+        ? `<button onclick="goto(${page + 1}, '${encodeURIComponent(search)}')">Next →</button>`
+        : `<span class="disabled">Next →</span>`
+
+      el.innerHTML = prev + nums + next
+    }
+
+    window.goto = (p, s) => loadProducts(p, decodeURIComponent(s))
+
+    window.addToCart = async (productId) => {
+      if (!isLoggedIn()) {
+        toast('Please sign in first!')
+        window.location.href = '/pages/login.html'
+        return
+      }
+      try {
+        await api('/cart', { method: 'POST', body: JSON.stringify({ productId }) })
+        toast('Added to cart! 🛒')
+        updateCartBadge()
+        window.toggleCart()
+      } catch(err) { toast(err.message, 'error') }
+    }
+
+    window.delProduct = async (id, name) => {
+      if (!confirm(`Delete "${name}"? This cannot be undone.`)) return
+      try {
+        await api(`/products/${id}`, { method: 'DELETE' })
+        toast(`"${name}" deleted`)
+        loadProducts(currentPage)
+      } catch(err) { toast(err.message, 'error') }
+    }
+
+    loadProducts()
+  </script>
+</body>
+</html>

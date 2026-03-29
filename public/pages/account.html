@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Account — Sick Fits</title>
+  <link rel="stylesheet" href="/css/global.css"/>
+  <style>
+    .account-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; }
+    @media (max-width: 700px) { .account-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="inner-header">
+      <div class="logo"><a href="/">Sick Fits</a></div>
+      <nav class="nav-links" id="main-nav"></nav>
+    </div>
+  </header>
+  <div class="page">
+    <div id="account-container"><p class="loading-text">Loading...</p></div>
+  </div>
+  <script type="module">
+    import { api, getUser, isLoggedIn, toast, renderNav } from '/js/utils.js'
+    renderNav('main-nav')
+
+    if (!isLoggedIn()) {
+      document.getElementById('account-container').innerHTML =
+        `<div class="error-message"><p>Please <a href="/pages/login.html">sign in</a> to view your account.</p></div>`
+    } else {
+      const user = getUser()
+      document.getElementById('account-container').innerHTML = `
+        <h1 class="supreme">Update Your Info</h1>
+        <br/><br/>
+        <div class="account-grid">
+          <div>
+            <h2>Update Info</h2>
+            <form class="sick-form" id="update-form">
+              <fieldset>
+                <label>Name<input name="name" type="text" value="${user.name}"/></label>
+                <label>Email<input name="email" type="email" value="${user.email}"/></label>
+                <button type="submit">Save Changes!</button>
+              </fieldset>
+            </form>
+          </div>
+          <div>
+            <h2>Change Password</h2>
+            <form class="sick-form" id="pw-form">
+              <fieldset>
+                <label>Current Password<input name="current" type="password"/></label>
+                <label>New Password<input name="new" type="password" minlength="6"/></label>
+                <label>Confirm Password<input name="confirm" type="password" minlength="6"/></label>
+                <button type="submit">Update Password!</button>
+              </fieldset>
+            </form>
+          </div>
+        </div>`
+
+      document.getElementById('update-form').addEventListener('submit', e => {
+        e.preventDefault(); toast('Profile update coming soon!')
+      })
+      document.getElementById('pw-form').addEventListener('submit', e => {
+        e.preventDefault()
+        const fd = new FormData(e.target)
+        if (fd.get('new') !== fd.get('confirm')) { toast('Passwords do not match!', 'error'); return }
+        toast('Password change coming soon!')
+      })
+    }
+  </script>
+</body>
+</html>

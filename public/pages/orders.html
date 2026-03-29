@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Your Orders — Sick Fits</title>
+  <link rel="stylesheet" href="/css/global.css"/>
+</head>
+<body>
+  <header>
+    <div class="inner-header">
+      <div class="logo"><a href="/">Sick Fits</a></div>
+      <nav class="nav-links" id="main-nav"></nav>
+    </div>
+  </header>
+  <div class="page">
+    <h1 class="supreme">Your Orders</h1>
+    <br/><br/>
+    <ul id="orders-list" style="padding:0;list-style:none;display:grid;gap:3rem"></ul>
+  </div>
+  <script type="module">
+    import { api, isLoggedIn, formatPrice, toast, renderNav } from '/js/utils.js'
+    renderNav('main-nav')
+
+    const list = document.getElementById('orders-list')
+
+    if (!isLoggedIn()) {
+      list.innerHTML = `<li class="error-message"><p>Please <a href="/pages/login.html">sign in</a> to view your orders.</p></li>`
+    } else {
+      api('/orders').then(orders => {
+        if (!orders.length) {
+          list.innerHTML = `<li class="loading-text">No orders yet. <a href="/">Start shopping →</a></li>`
+          return
+        }
+        list.innerHTML = orders.map(order => `
+          <li class="order-list-item">
+            <h2>
+              Order for ${formatPrice(order.total)}
+              <span style="font-size:1.4rem;font-weight:300"> — ${new Date(order.createdAt).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</span>
+            </h2>
+            <div class="order-meta">
+              <p><strong>${order.items.reduce((s, i) => s + i.quantity, 0)}</strong> Items</p>
+              <p><strong>${formatPrice(order.total)}</strong> Total</p>
+              <p><strong style="text-transform:uppercase">${order.status}</strong> Status</p>
+            </div>
+            <div class="images">
+              ${order.items.map(i =>
+                i.product.imageUrl
+                  ? `<img src="${i.product.imageUrl}" alt="${i.product.name}"/>`
+                  : `<div style="background:var(--offWhite);height:200px"></div>`
+              ).join('')}
+            </div>
+          </li>`).join('')
+      }).catch(err => {
+        list.innerHTML = `<li class="error-message"><p><strong>Error:</strong> ${err.message}</p></li>`
+      })
+    }
+  </script>
+</body>
+</html>
